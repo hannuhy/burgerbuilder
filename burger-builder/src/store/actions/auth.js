@@ -1,12 +1,13 @@
 import * as actionTypes from './actionTypes';
-import axios from 'axios';
 
+// sync action creator without side-effects, doesnt need saga!
 export const authStart = () => {
     return {
         type: actionTypes.AUTH_START
     };
 };
 
+// sync action creator without side-effects, doesnt need saga!
 export const authSuccess = (token, userId) => {
     return {
         type: actionTypes.AUTH_SUCCESS,
@@ -15,6 +16,7 @@ export const authSuccess = (token, userId) => {
     };
 };
 
+// sync action creator without side-effects, doesnt need saga!
 export const authFail = (error) => {
     return {
         type: actionTypes.AUTH_FAIL,
@@ -22,49 +24,35 @@ export const authFail = (error) => {
     };
 };
 
+// returns actiontype which is handled by redux saga!
 export const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('expirationDate');
-    localStorage.removeItem('userId');
+    // localStorage.removeItem('token');
+    // localStorage.removeItem('expirationDate');
+    // localStorage.removeItem('userId');
+    return {
+        type: actionTypes.AUTH_INITIATE_LOGOUT
+    };
+};
+
+export const logoutSucceed = () => {
     return {
         type: actionTypes.AUTH_LOGOUT
     };
 };
 
 export const checkAuthTimeout = (expirationTime) => {
-    return dispatch => {
-        setTimeout(() => {
-            dispatch(logout());
-        }, expirationTime * 1000);
+    return {
+        type: actionTypes.AUTH_CHECK_TIMEOUT,
+        expirationTime: expirationTime
     };
 };
 
 export const auth = (email, password, isSignup) => {
-    return dispatch => {
-        dispatch(authStart());
-        const authData = {
-            email: email,
-            password: password,
-            returnSecureToken: true
-        };
-
-        let url = 'https://www.googleapis.com/identitytoolkit/v3/relyingparty/signupNewUser?key=AIzaSyDkRBhbSKrdTcwok2gFWn6IxCzpH3Tu6Kw';
-        if (!isSignup) {
-            url = 'https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword?key=AIzaSyDkRBhbSKrdTcwok2gFWn6IxCzpH3Tu6Kw';
-        }
-        axios.post(url, authData)
-            .then(response => {
-                const expirationDate = new Date(new Date().getTime() + response.data.expiresIn * 1000);
-                localStorage.setItem('token', response.data.idToken);
-                localStorage.setItem('expirationDate', expirationDate);
-                localStorage.setItem('userId', response.data.localId);
-                dispatch(authSuccess(response.data.idToken, response.data.localId));
-                dispatch(checkAuthTimeout(response.data.expiresIn));
-            })
-            .catch(err => {
-                console.log(err);
-                dispatch(authFail(err.response.data.error));
-            });
+    return {
+        type: actionTypes.AUTH_USER,
+        email: email,
+        password: password,
+        isSignup: isSignup
     };
 };
 
@@ -76,19 +64,7 @@ export const setAuthRedirectPath = (path) => {
 };
 
 export const authCheckState = () => {
-    return dispatch => {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            dispatch(logout());
-        } else {
-            const expirationDate = new Date(localStorage.getItem('expirationDate'));
-            if (expirationDate > new Date()) {
-                const userId = localStorage.getItem('userId');
-                dispatch(authSuccess(token, userId));
-                dispatch(checkAuthTimeout((expirationDate.getTime() - new Date().getTime()) / 1000));
-            } else {
-                dispatch(logout());
-            }
-        }
+    return {
+        type: actionTypes.AUTH_CHECK_STATE
     };
 };
