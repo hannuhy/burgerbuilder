@@ -9,11 +9,8 @@ import NavigationItem from './NavigationItem/NavigationItem';
 // this is how to connect enzyme
 configure({adapter: new Adapter()});
 
-// this describe and it is from jest, jest is automatically available due to create-react-app setup
-// first arguments describes what to test, doesn't need to be jsx element. This is what you see in the console output
 describe('<NavigationItems />', () => {
     let wrapper;
-    //this is run before each 'it' function (test)
     beforeEach(() => {
         wrapper = shallow(<NavigationItems />);
     });
